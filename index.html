@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PV / CRA Console — Static Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#1B2333;
+  --paper:#ECEAE2;
+  --panel:#FFFFFF;
+  --serious:#8C2F39;
+  --nonserious:#2F6B5E;
+  --pending:#B8863B;
+  --line:#C9C4B6;
+  --muted:#6B6A62;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--ink);padding-bottom:14px;margin-bottom:4px;}
+.masthead h1{font-family:'Newsreader',serif;font-weight:500;font-size:27px;margin:0;}
+.masthead .tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;line-height:1.5;text-transform:uppercase;letter-spacing:0.06em;}
+.subline{font-size:12px;color:var(--muted);margin:8px 0 10px;font-family:'IBM Plex Mono',monospace;}
+.subline b{color:var(--ink);}
+
+.demo-banner{background:var(--ink);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:10px 14px;margin-bottom:20px;line-height:1.6;}
+.demo-banner b{color:#fff;}
+
+.tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--line);margin-bottom:22px;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px 9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);}
+.tab-btn:hover{color:var(--ink);}
+
+.module{display:none;}
+.module.active{display:block;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+.grid.single{grid-template-columns:1fr;}
+@media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+.panel{background:var(--panel);border:1px solid var(--line);}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);}
+.panel-head span.label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.panel-head span.id{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink);}
+.panel-body{padding:16px;}
+
+textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--line);background:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.6;padding:12px;color:var(--ink);}
+textarea:focus{outline:2px solid var(--ink);outline-offset:1px;}
+input{width:100%;border:1px solid var(--line);background:var(--paper);padding:8px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink);}
+input:focus{outline:2px solid var(--ink);outline-offset:1px;}
+
+.field label{display:block;font-size:10.5px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;}
+.field{margin-bottom:10px;}
+
+.examples{margin-top:10px;}
+.examples .ex-label{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;}
+.ex-btn{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px dotted var(--line);padding:7px 2px;font-size:12px;color:var(--ink);cursor:pointer;}
+.ex-btn:hover{color:var(--serious);}
+.ex-btn.selected{color:var(--serious);font-weight:600;}
+
+.act-btn{margin-top:14px;width:100%;padding:12px;background:var(--ink);color:var(--paper);border:none;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;}
+.act-btn:hover{background:var(--serious);}
+.act-btn:disabled{background:var(--muted);cursor:wait;}
+.act-btn.secondary{background:none;color:var(--ink);border:1px solid var(--ink);}
+.act-btn.secondary:hover{background:var(--ink);color:var(--paper);}
+
+.empty-state{color:var(--muted);font-size:12.5px;font-family:'IBM Plex Mono',monospace;padding:36px 18px;text-align:center;line-height:1.7;}
+.error-box{border:1px solid var(--pending);color:var(--pending);padding:14px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;line-height:1.6;}
+
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:0;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:14px;}
+.chain-node{background:var(--paper);border:1px solid var(--line);padding:5px 8px;color:var(--ink);}
+.chain-arrow{color:var(--muted);padding:0 5px;}
+.chain-node.pt{background:var(--ink);color:var(--paper);font-weight:500;}
+
+.stamp{display:inline-block;border:2px solid var(--serious);color:var(--serious);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12.5px;letter-spacing:0.08em;padding:5px 12px;transform:rotate(-1.5deg);margin-bottom:4px;}
+.stamp.clear{border-color:var(--nonserious);color:var(--nonserious);}
+
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 6px;}
+.section-label:first-child{margin-top:0;}
+.criteria-list, .qa-list{margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;}
+.criteria-list li{color:var(--serious);}
+.pt-name{font-family:'Newsreader',serif;font-size:20px;font-weight:500;margin:2px 0 2px;}
+.event-desc{font-size:12.5px;color:var(--muted);}
+
+.causality-row{display:flex;align-items:baseline;gap:10px;}
+.causality-cat{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12.5px;background:var(--paper);border:1px solid var(--line);padding:3px 8px;}
+.causality-text{font-size:12.5px;line-height:1.6;margin-top:6px;}
+.reasoning{font-size:12px;line-height:1.7;color:var(--muted);background:var(--paper);border:1px solid var(--line);padding:11px 13px;margin-top:4px;}
+
+.patient-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.field.span2{grid-column:1 / -1;}
+
+.cioms-wrap{margin-top:22px;border-top:2px solid var(--ink);}
+.cioms-doc{background:var(--panel);border:1px solid var(--line);}
+.cioms-doc-head{display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:2px solid var(--ink);}
+.cioms-doc-head h2{font-family:'Newsreader',serif;font-weight:500;font-size:18px;margin:0;}
+.cioms-doc-head .cioms-id{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+.print-btn{background:none;border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 12px;cursor:pointer;text-transform:uppercase;}
+.print-btn:hover{border-color:var(--ink);}
+.cioms-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.cioms-box{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 14px;}
+.cioms-box:nth-child(4n){border-right:none;}
+.cioms-box.wide{grid-column:span 2;}
+.cioms-box.full{grid-column:1 / -1;}
+.cioms-num{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);margin-bottom:3px;}
+.cioms-val{font-size:13px;line-height:1.5;}
+.cioms-val.big{font-family:'Newsreader',serif;font-size:16px;}
+.cioms-val.mono{font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+.cioms-footer{padding:12px 20px;font-size:10.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.6;border-top:1px solid var(--line);}
+
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 10px;border:1px solid currentColor;}
+.badge.high{color:var(--serious);}
+.badge.medium{color:var(--pending);}
+.badge.low{color:var(--nonserious);}
+
+.site-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.site-table th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);border-bottom:1px solid var(--ink);padding:8px 8px;}
+.site-table td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+.site-table input{padding:5px 6px;font-size:12px;}
+.risk-bar{height:6px;background:var(--line);margin-top:4px;position:relative;}
+.risk-bar-fill{height:100%;background:var(--serious);}
+
+.dash-stat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dotted var(--line);}
+.dash-stat .k{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+.dash-stat .v{font-family:'Newsreader',serif;font-size:20px;}
+.bar-row{margin:8px 0;}
+.bar-label{display:flex;justify-content:space-between;font-size:11.5px;font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
+.bar-track{height:9px;background:var(--paper);border:1px solid var(--line);}
+.bar-fill{height:100%;background:var(--ink);}
+
+.footnote{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;}
+.footnote b{color:var(--ink);}
+
+@media print{
+  body *{visibility:hidden;}
+  .cioms-doc, .cioms-doc *{visibility:visible;}
+  .cioms-doc{position:absolute;top:0;left:0;width:100%;border:none;}
+  .print-btn{display:none;}
+}
+@media (max-width:600px){
+  .patient-fields{grid-template-columns:1fr;}
+  .cioms-grid{grid-template-columns:1fr 1fr;}
+  .site-table{font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>PV / CRA Console</h1>
+    <div class="tag">Portfolio&nbsp;Demonstration<br>Sharma&nbsp;MedInsights</div>
+  </div>
+  <div class="subline">Six-module prototype spanning case coding, duplicate detection, query generation, literature triage, site risk scoring, and portfolio-level reporting.</div>
+  <div class="demo-banner">
+    <b>STATIC DEMO MODE.</b> Modules 1–4 show pre-computed outputs for the preset example cases below (no live API, no key required — safe to host publicly). Click any "Load example" button, then run the module. Modules 5 and 6 are fully live, rule-based JavaScript with no external dependency.
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="coding">1. Case Coding</button>
+    <button class="tab-btn" data-tab="dup">2. Duplicate Check</button>
+    <button class="tab-btn" data-tab="query">3. Follow-up Queries</button>
+    <button class="tab-btn" data-tab="lit">4. Literature Triage</button>
+    <button class="tab-btn" data-tab="risk">5. Site Risk (RBQM)</button>
+    <button class="tab-btn" data-tab="dash">6. Dashboard</button>
+  </div>
+
+  <!-- MODULE 1: CASE CODING -->
+  <div class="module active" id="mod-coding">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Case Intake</span><span class="id" id="caseIdDisplay">— unassigned —</span></div>
+        <div class="panel-body">
+          <div class="patient-fields">
+            <div class="field"><label>Patient Initials</label><input id="fInitials" placeholder="e.g. R.K."></div>
+            <div class="field"><label>Age / Sex</label><input id="fAgeSex" placeholder="e.g. 58 / M"></div>
+            <div class="field span2"><label>Suspect Drug(s)</label><input id="fDrug" placeholder="e.g. Methotrexate 15mg weekly, oral"></div>
+            <div class="field"><label>Reporter Type</label><input id="fReporter" placeholder="e.g. Physician"></div>
+            <div class="field"><label>Report Date</label><input id="fDate" type="date"></div>
+          </div>
+          <textarea id="narrativeInput" readonly></textarea>
+          <div class="examples">
+            <div class="ex-label">Load example (select one)</div>
+            <button class="ex-btn" data-ex="0">Methotrexate hepatotoxicity — serious</button>
+            <button class="ex-btn" data-ex="1">Sorafenib, mild PPE (Grade 1) — not serious</button>
+            <button class="ex-btn" data-ex="2">Capecitabine, severe PPE (Grade 3) — serious</button>
+          </div>
+          <button class="act-btn" id="codeBtn">Code Case</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Coding Output</span><span class="id" id="outputIdDisplay"></span></div>
+        <div class="panel-body" id="outputBody">
+          <div class="empty-state">No case coded yet. Select an example above, then click Code Case.</div>
+        </div>
+      </div>
+    </div>
+    <div class="cioms-wrap" id="ciomsWrap"></div>
+  </div>
+
+  <!-- MODULE 2: DUPLICATE DETECTION -->
+  <div class="module" id="mod-dup">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Case A</span></div>
+        <div class="panel-body"><textarea id="dupA" readonly></textarea></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Case B</span></div>
+        <div class="panel-body"><textarea id="dupB" readonly></textarea></div>
+      </div>
+    </div>
+    <div class="examples" style="max-width:420px;">
+      <div class="ex-label">Load example pair</div>
+      <button class="ex-btn" data-ex="0">Methotrexate jaundice — two channels, same case</button>
+      <button class="ex-btn" data-ex="1">Capecitabine PPE — physician vs. pharmacy line</button>
+    </div>
+    <button class="act-btn" id="dupBtn" style="max-width:320px;">Check for Duplicate</button>
+    <div class="panel" style="margin-top:18px;">
+      <div class="panel-head"><span class="label">Duplicate Assessment</span></div>
+      <div class="panel-body" id="dupOutput"><div class="empty-state">Select an example pair above and run the check.</div></div>
+    </div>
+  </div>
+
+  <!-- MODULE 3: FOLLOW-UP QUERY GENERATOR -->
+  <div class="module" id="mod-query">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Incomplete Case</span></div>
+        <div class="panel-body">
+          <textarea id="queryInput" readonly></textarea>
+          <div class="examples">
+            <div class="ex-label">Load example</div>
+            <button class="ex-btn" data-ex="0">Antibiotic rash — sparse report</button>
+            <button class="ex-btn" data-ex="1">Capecitabine PPE — grade/dose/outcome missing</button>
+          </div>
+          <button class="act-btn" id="queryBtn">Identify Gaps &amp; Draft Queries</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Follow-up Output</span></div>
+        <div class="panel-body" id="queryOutput"><div class="empty-state">Select an example above to see missing data elements and draft follow-up questions.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 4: LITERATURE TRIAGE -->
+  <div class="module" id="mod-lit">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Abstract</span></div>
+        <div class="panel-body">
+          <textarea id="litInput" readonly></textarea>
+          <div class="examples">
+            <div class="ex-label">Load example</div>
+            <button class="ex-btn" data-ex="0">PPI &amp; hypomagnesemia-related arrhythmia</button>
+            <button class="ex-btn" data-ex="1">Capecitabine PPE dose-modification trial</button>
+          </div>
+          <button class="act-btn" id="litBtn">Triage for Safety Relevance</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Triage Result</span></div>
+        <div class="panel-body" id="litOutput"><div class="empty-state">Select an abstract above to classify PBRER/safety relevance.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 5: SITE RISK SCORING (RBQM) — fully live, no API -->
+  <div class="module" id="mod-risk">
+    <div class="panel">
+      <div class="panel-head"><span class="label">Site Metrics Input</span><span class="id">Rule-based scoring — fully live</span></div>
+      <div class="panel-body">
+        <table class="site-table" id="siteTable">
+          <thead><tr>
+            <th>Site</th><th>Major Deviations</th><th>Avg Query Turnaround (days)</th><th>SAE Reporting Delay (days)</th><th>Enrollment vs Target (%)</th>
+          </tr></thead>
+          <tbody id="siteTableBody"></tbody>
+        </table>
+        <button class="act-btn secondary" id="addSiteBtn" style="max-width:200px;margin-top:12px;">+ Add Site</button>
+        <button class="act-btn" id="riskBtn">Calculate Risk Tiers</button>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:18px;">
+      <div class="panel-head"><span class="label">Risk-Based Monitoring Output</span></div>
+      <div class="panel-body" id="riskOutput"><div class="empty-state">Enter site metrics and calculate risk tiers to see monitoring priority ranking.</div></div>
+    </div>
+  </div>
+
+  <!-- MODULE 6: DASHBOARD — fully live, no API -->
+  <div class="module" id="mod-dash">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><span class="label">Session Summary</span></div>
+        <div class="panel-body" id="dashStats"><div class="empty-state">Code cases in Module 1 to populate this dashboard.</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="label">Distributions</span></div>
+        <div class="panel-body" id="dashBars"><div class="empty-state">No data yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <b>Methodology note —</b> This is a static portfolio demonstration. Modules 1–4 illustrate LLM-based reasoning against ICH E2A seriousness criteria, WHO-UMC causality logic, and MedDRA-style hierarchy approximation (no licensed MedDRA dictionary used) via pre-computed example outputs. Module 5 uses a fixed weighted-scoring formula consistent with ICH E6(R2) risk-based quality management principles, and runs live with any input. All output is for educational/portfolio demonstration only.
+  </div>
+</div>
+
+<script>
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+function genCaseId(prefix){
+  const y = new Date().getFullYear();
+  const n = Math.floor(1000 + Math.random()*9000);
+  return `${prefix}-${y}-${n}`;
+}
+function tabSwitch(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('mod-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab === 'dash') renderDashboard();
+    });
+  });
+}
+tabSwitch();
+
+/* ================= MODULE 1: CASE CODING (preset demo data) ================= */
+const codingExamples = [
+  {
+    narrative: `A 58-year-old male on long-term methotrexate for rheumatoid arthritis presented with progressive yellowing of the skin and eyes, dark urine, and fatigue over the past 10 days. Liver function tests showed markedly elevated ALT and bilirubin. He was admitted to hospital for further management and methotrexate was withheld.`,
+    result: {
+      primary_event: "Jaundice and markedly elevated liver enzymes following long-term methotrexate therapy",
+      suggested_pt: "Hepatotoxicity",
+      soc: "Hepatobiliary disorders",
+      hlgt: "Hepatic and hepatobiliary disorders",
+      hlt: "Hepatic enzyme abnormalities",
+      seriousness_flag: true,
+      seriousness_criteria: ["Hospitalization or prolongation of hospitalization"],
+      causality_category: "Probable/Likely",
+      causality_reasoning: "The temporal relationship is consistent with methotrexate-induced hepatotoxicity, a recognized effect of long-term therapy; withholding the drug (positive dechallenge) supports a probable causal association even without rechallenge data.",
+      reasoning_transcript: "The narrative describes jaundice, dark urine, and markedly elevated ALT/bilirubin in a patient on long-term methotrexate, a drug with an established hepatotoxicity profile. Hospital admission meets the ICH E2A hospitalization criterion for seriousness. Methotrexate was withheld following the event, a positive dechallenge that supports probable causality."
+    }
+  },
+  {
+    narrative: `A 49-year-old male on sorafenib for hepatocellular carcinoma reported mild tingling and slight redness on the soles of both feet during week 4 of treatment. There was no pain, blistering, or interference with daily activities. Sorafenib was continued at the same dose, and the symptoms were managed with a moisturizing cream.`,
+    result: {
+      primary_event: "Mild tingling and redness on the soles of both feet (Grade 1 palmar-plantar erythrodysaesthesia) during sorafenib therapy",
+      suggested_pt: "Palmar-plantar erythrodysaesthesia syndrome",
+      soc: "Skin and subcutaneous tissue disorders",
+      hlgt: "Epidermal and dermal conditions",
+      hlt: "Erythemas",
+      seriousness_flag: false,
+      seriousness_criteria: [],
+      causality_category: "Probable/Likely",
+      causality_reasoning: "Palmar-plantar erythrodysaesthesia is a well-recognized class effect of multikinase inhibitors such as sorafenib, and the week-4 onset is consistent with known latency, though the mild severity does not itself affect the causality assessment.",
+      reasoning_transcript: "The event involves only mild tingling and redness without pain, blistering, or functional impairment, and required no intervention beyond a moisturizing cream while treatment continued unchanged. None of the ICH E2A seriousness criteria are met at this severity grade, so the case is coded as not serious despite being a recognized adverse drug reaction."
+    }
+  },
+  {
+    narrative: `A 52-year-old female on capecitabine for metastatic colorectal cancer developed painful redness, swelling, and peeling of the skin on both palms and soles during cycle 3 of treatment, consistent with palmar-plantar erythrodysesthesia (hand-foot syndrome). She reported difficulty walking and was unable to perform routine daily activities such as buttoning clothes or holding utensils due to pain. Capecitabine was withheld and the dose was reduced by 25% for the next cycle. Symptoms improved over the following two weeks with topical emollients and pyridoxine.`,
+    result: {
+      primary_event: "Painful erythema, swelling, and skin peeling of palms and soles with functional impairment (Grade 3 palmar-plantar erythrodysaesthesia) during capecitabine therapy",
+      suggested_pt: "Palmar-plantar erythrodysaesthesia syndrome",
+      soc: "Skin and subcutaneous tissue disorders",
+      hlgt: "Epidermal and dermal conditions",
+      hlt: "Erythemas",
+      seriousness_flag: true,
+      seriousness_criteria: ["Other medically important condition"],
+      causality_category: "Certain",
+      causality_reasoning: "Palmar-plantar erythrodysaesthesia is a well-established, dose-dependent effect of capecitabine with clear temporal association at cycle 3; a positive dechallenge (dose reduction with improvement) supports a certain causal relationship in the absence of a plausible alternative explanation.",
+      reasoning_transcript: "The narrative describes Grade 3-equivalent PPE causing functional impairment in daily activities. Although the patient was not hospitalized, this qualifies as 'other medically important condition' under ICH E2A since it required medical intervention (dose withholding and reduction) to prevent escalation. Dose reduction followed by improvement constitutes a positive dechallenge, strongly supporting drug causality."
+    }
+  }
+];
+
+const narrativeInput = document.getElementById('narrativeInput');
+const codeBtn = document.getElementById('codeBtn');
+const outputBody = document.getElementById('outputBody');
+const caseIdDisplay = document.getElementById('caseIdDisplay');
+const outputIdDisplay = document.getElementById('outputIdDisplay');
+const ciomsWrap = document.getElementById('ciomsWrap');
+
+let codingSelected = null;
+let lastCaseId = null, lastResult = null, lastNarrative = null;
+let codedCases = [];
+
+function wireExampleButtons(containerSelectorAll, targetTextareaIds, examplesArr, stateSetter){
+  document.querySelectorAll(containerSelectorAll).forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.ex);
+      btn.parentElement.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      stateSetter(idx);
+    });
+  });
+}
+
+wireExampleButtons('#mod-coding .ex-btn', null, codingExamples, (idx)=>{
+  codingSelected = idx;
+  narrativeInput.value = codingExamples[idx].narrative;
+  outputBody.innerHTML = `<div class="empty-state">Example loaded. Click Code Case to run it.</div>`;
+  ciomsWrap.innerHTML = '';
+});
+
+function codeCase(){
+  if(codingSelected === null){
+    outputBody.innerHTML = `<div class="error-box">This is a static demo — select one of the preset example cases above, then click Code Case.</div>`;
+    return;
+  }
+  const ex = codingExamples[codingSelected];
+  const caseId = genCaseId('PV');
+  lastCaseId = caseId; lastNarrative = ex.narrative; lastResult = null;
+  ciomsWrap.innerHTML = '';
+  caseIdDisplay.textContent = caseId; outputIdDisplay.textContent = caseId;
+  codeBtn.disabled = true; codeBtn.textContent = 'Coding...';
+  outputBody.innerHTML = `<div class="empty-state">Processing narrative...</div>`;
+
+  setTimeout(()=>{
+    renderResult(ex.result);
+    codedCases.push({id: caseId, narrative: ex.narrative, result: ex.result});
+    codeBtn.disabled = false; codeBtn.textContent = 'Code Case';
+  }, 700);
+}
+
+function renderResult(r){
+  lastResult = r;
+  const criteriaHtml = (r.seriousness_criteria && r.seriousness_criteria.length)
+    ? `<ul class="criteria-list">${r.seriousness_criteria.map(c=>`<li>${escapeHtml(c)}</li>`).join('')}</ul>`
+    : `<div class="event-desc">No ICH E2A seriousness criteria met.</div>`;
+
+  outputBody.innerHTML = `
+    <div class="chain">
+      <span class="chain-node">${escapeHtml(r.soc)}</span><span class="chain-arrow">→</span>
+      <span class="chain-node">${escapeHtml(r.hlgt)}</span><span class="chain-arrow">→</span>
+      <span class="chain-node">${escapeHtml(r.hlt)}</span><span class="chain-arrow">→</span>
+      <span class="chain-node pt">${escapeHtml(r.suggested_pt)}</span>
+    </div>
+    <div class="section-label">Suggested Preferred Term</div>
+    <div class="pt-name">${escapeHtml(r.suggested_pt)}</div>
+    <div class="event-desc">${escapeHtml(r.primary_event)}</div>
+    <div class="section-label">Seriousness (ICH E2A)</div>
+    <div class="stamp ${r.seriousness_flag ? '' : 'clear'}">${r.seriousness_flag ? 'SERIOUS' : 'NOT SERIOUS'}</div>
+    ${criteriaHtml}
+    <div class="section-label">Causality (WHO-UMC)</div>
+    <div class="causality-row"><span class="causality-cat">${escapeHtml(r.causality_category)}</span></div>
+    <div class="causality-text">${escapeHtml(r.causality_reasoning)}</div>
+    <div class="section-label">Reasoning Transcript</div>
+    <div class="reasoning">${escapeHtml(r.reasoning_transcript)}</div>
+    <button class="act-btn secondary" id="ciomsBtn">Generate CIOMS I Summary</button>
+  `;
+  document.getElementById('ciomsBtn').addEventListener('click', renderCiomsSummary);
+}
+
+function fieldVal(id){ const v = document.getElementById(id).value.trim(); return v ? v : 'Not provided'; }
+
+function renderCiomsSummary(){
+  if(!lastResult) return;
+  const r = lastResult;
+  const initials = fieldVal('fInitials'), ageSex = fieldVal('fAgeSex'), drug = fieldVal('fDrug'), reporter = fieldVal('fReporter');
+  const dateRaw = document.getElementById('fDate').value;
+  const reportDate = dateRaw ? dateRaw : 'Not provided';
+  const criteriaText = (r.seriousness_criteria && r.seriousness_criteria.length) ? r.seriousness_criteria.join('; ') : 'None met';
+
+  ciomsWrap.innerHTML = `
+    <div class="cioms-doc">
+      <div class="cioms-doc-head">
+        <h2>CIOMS I — Suspect Adverse Reaction Report (Simulated)</h2>
+        <div><span class="cioms-id">${escapeHtml(lastCaseId)}</span>
+          <button class="print-btn" id="printBtn" style="margin-left:12px;">Print / Save PDF</button></div>
+      </div>
+      <div class="cioms-grid">
+        <div class="cioms-box"><div class="cioms-num">1. Patient Initials</div><div class="cioms-val mono">${escapeHtml(initials)}</div></div>
+        <div class="cioms-box"><div class="cioms-num">2. Age / Sex</div><div class="cioms-val mono">${escapeHtml(ageSex)}</div></div>
+        <div class="cioms-box wide"><div class="cioms-num">3. Report Date</div><div class="cioms-val mono">${escapeHtml(reportDate)}</div></div>
+        <div class="cioms-box full"><div class="cioms-num">4. Suspect Drug(s)</div><div class="cioms-val">${escapeHtml(drug)}</div></div>
+        <div class="cioms-box full"><div class="cioms-num">5. Reaction (Preferred Term)</div><div class="cioms-val big">${escapeHtml(r.suggested_pt)}</div></div>
+        <div class="cioms-box full"><div class="cioms-num">6. Case Narrative</div><div class="cioms-val">${escapeHtml(lastNarrative)}</div></div>
+        <div class="cioms-box wide"><div class="cioms-num">7. Seriousness</div><div class="cioms-val mono">${r.seriousness_flag ? 'SERIOUS' : 'NOT SERIOUS'}</div></div>
+        <div class="cioms-box wide"><div class="cioms-num">8. Seriousness Criteria</div><div class="cioms-val">${escapeHtml(criteriaText)}</div></div>
+        <div class="cioms-box wide"><div class="cioms-num">9. Causality (WHO-UMC)</div><div class="cioms-val mono">${escapeHtml(r.causality_category)}</div></div>
+        <div class="cioms-box wide"><div class="cioms-num">10. Causality Rationale</div><div class="cioms-val">${escapeHtml(r.causality_reasoning)}</div></div>
+        <div class="cioms-box full"><div class="cioms-num">11. Hierarchy (SOC → HLGT → HLT → PT)</div><div class="cioms-val mono">${escapeHtml(r.soc)} → ${escapeHtml(r.hlgt)} → ${escapeHtml(r.hlt)} → ${escapeHtml(r.suggested_pt)}</div></div>
+        <div class="cioms-box full"><div class="cioms-num">12. Reporter Type</div><div class="cioms-val mono">${escapeHtml(reporter)}</div></div>
+      </div>
+      <div class="cioms-footer">Simulated CIOMS I-format summary for educational/portfolio purposes only. Not for real regulatory reporting.</div>
+    </div>`;
+  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+  ciomsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+codeBtn.addEventListener('click', codeCase);
+
+/* ================= MODULE 2: DUPLICATE DETECTION (preset demo data) ================= */
+const dupExamples = [
+  {
+    a: `Female patient, approx 58 years, on methotrexate, developed jaundice and elevated LFTs, hospitalized for management. Reported by treating physician on 12 March.`,
+    b: `Male patient approx 58 yrs, taking methotrexate for RA, admitted with yellow discoloration of eyes/skin and abnormal liver enzymes. Reported via patient support programme, follow up call dated 15 March.`,
+    result: {
+      duplicate_likelihood: "High",
+      matching_factors: ["Same approximate age (58) and drug (methotrexate)", "Same reaction: jaundice/yellow discoloration with abnormal liver enzymes", "Both cases resulted in hospitalization/medical management", "Reports dated 3 days apart, consistent with follow-up of the same event"],
+      differentiating_factors: ["Sex recorded inconsistently across the two reports (female vs. male) — likely a data entry error given all other matching elements", "Reported through two different channels (treating physician vs. patient support programme)", "No shared patient identifier or case reference number provided"],
+      reasoning: "Both narratives describe a patient of matching age on methotrexate presenting with the same hepatic reaction within a narrow reporting window, strongly suggesting these are two reports of a single underlying case captured through different intake channels. The sex discrepancy is a likely transcription error rather than evidence of two distinct patients, given the otherwise strong overlap.",
+      recommendation: "Flag for duplicate reconciliation review; request patient identifiers or case reference numbers from both source channels to confirm before merging, and verify the sex discrepancy."
+    }
+  },
+  {
+    a: `Female patient, approx 52 years, on capecitabine cycle 3 for colorectal cancer, developed painful redness and peeling on palms and soles. Reported by treating oncologist, dated 8 April.`,
+    b: `52 yr old woman receiving capecitabine chemotherapy, presented with hand-foot syndrome — erythema, pain, skin peeling on both hands and feet, affecting cycle 3. Reported through hospital pharmacy adverse event line, follow-up entry dated 11 April.`,
+    result: {
+      duplicate_likelihood: "High",
+      matching_factors: ["Identical age (52) and sex (female)", "Same suspect drug and treatment cycle: capecitabine, cycle 3", "Same reaction described in different wording: painful erythema and peeling of palms/soles vs. hand-foot syndrome with erythema, pain, and skin peeling", "Reports dated 3 days apart, consistent with the same event followed up through a second channel"],
+      differentiating_factors: ["Reported through two different channels (treating oncologist vs. hospital pharmacy adverse event line)", "No shared patient identifier or case reference number provided", "Minor differences in terminology (hand-foot syndrome vs. palmar-plantar description) reflect clinical synonym use, not a distinct event"],
+      reasoning: "Both narratives describe an identical patient profile and treatment cycle with a clinically identical event described in different clinical shorthand, reported three days apart through different channels — a classic pattern for the same case entering the safety database twice.",
+      recommendation: "Flag for duplicate reconciliation review; request case reference numbers from both the oncology and pharmacy reporting channels before merging into a single case record."
+    }
+  }
+];
+let dupSelected = null;
+document.querySelectorAll('#mod-dup .ex-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const idx = parseInt(btn.dataset.ex);
+    btn.parentElement.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    dupSelected = idx;
+    document.getElementById('dupA').value = dupExamples[idx].a;
+    document.getElementById('dupB').value = dupExamples[idx].b;
+    document.getElementById('dupOutput').innerHTML = `<div class="empty-state">Example pair loaded. Click Check for Duplicate to run it.</div>`;
+  });
+});
+document.getElementById('dupBtn').addEventListener('click', ()=>{
+  const out = document.getElementById('dupOutput');
+  if(dupSelected === null){ out.innerHTML = `<div class="error-box">This is a static demo — select one of the preset example pairs above, then click Check for Duplicate.</div>`; return; }
+  out.innerHTML = `<div class="empty-state">Comparing cases...</div>`;
+  setTimeout(()=>{
+    const r = dupExamples[dupSelected].result;
+    const cls = r.duplicate_likelihood.toLowerCase();
+    out.innerHTML = `
+      <span class="badge ${cls}">${escapeHtml(r.duplicate_likelihood)} DUPLICATE LIKELIHOOD</span>
+      <div class="section-label">Matching Factors</div>
+      <ul class="qa-list">${r.matching_factors.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+      <div class="section-label">Differentiating Factors</div>
+      <ul class="qa-list">${r.differentiating_factors.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+      <div class="section-label">Reasoning</div>
+      <div class="reasoning">${escapeHtml(r.reasoning)}</div>
+      <div class="section-label">Recommendation</div>
+      <div class="event-desc">${escapeHtml(r.recommendation)}</div>
+    `;
+  }, 700);
+});
+
+/* ================= MODULE 3: FOLLOW-UP QUERY GENERATOR (preset demo data) ================= */
+const queryExamples = [
+  {
+    narrative: `A patient developed a skin rash after starting a new antibiotic. The reaction was reported by a family member. No further details were given.`,
+    result: {
+      completeness_assessment: "Insufficient",
+      missing_elements: ["Patient age and sex", "Name, dose, and route of the suspect antibiotic", "Exact onset date/timing relative to drug start", "Severity and distribution of the rash", "Current outcome/status of the reaction", "Any treatment given and response (dechallenge information)", "Relevant medical history or known drug allergies"],
+      follow_up_questions: [
+        "Could you confirm the patient's age, sex, and the name, dose, and route of the antibiotic suspected of causing the reaction?",
+        "What was the exact date the rash began relative to starting the antibiotic, and how would you describe its severity and extent?",
+        "Was the antibiotic discontinued, and if so, did the rash improve or resolve afterward?",
+        "What is the current status of the reaction, and was any treatment administered?",
+        "Does the patient have any known drug allergies or a prior history of similar reactions?"
+      ]
+    }
+  },
+  {
+    narrative: `A patient on capecitabine developed hand-foot syndrome. The oncology nurse noted skin changes on the hands and feet. No grade, dose information, or outcome was documented.`,
+    result: {
+      completeness_assessment: "Partial",
+      missing_elements: ["Severity grade of the hand-foot syndrome (1-3)", "Exact capecitabine dose and treatment cycle at onset", "Whether the dose was withheld, reduced, or continued", "Functional impact on daily activities (a key factor for seriousness assessment)", "Current outcome/status of the skin changes", "Any supportive treatment given (e.g., emollients, pyridoxine)"],
+      follow_up_questions: [
+        "What severity grade (1-3) was assigned to the hand-foot syndrome, and did it affect the patient's ability to perform daily activities?",
+        "What was the capecitabine dose and treatment cycle at the time symptoms began?",
+        "Was the capecitabine dose withheld, reduced, or continued unchanged following the event?",
+        "What is the current status of the skin changes, and was any supportive treatment given?"
+      ]
+    }
+  }
+];
+let querySelected = null;
+document.querySelectorAll('#mod-query .ex-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const idx = parseInt(btn.dataset.ex);
+    btn.parentElement.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    querySelected = idx;
+    document.getElementById('queryInput').value = queryExamples[idx].narrative;
+    document.getElementById('queryOutput').innerHTML = `<div class="empty-state">Example loaded. Click Identify Gaps & Draft Queries to run it.</div>`;
+  });
+});
+document.getElementById('queryBtn').addEventListener('click', ()=>{
+  const out = document.getElementById('queryOutput');
+  if(querySelected === null){ out.innerHTML = `<div class="error-box">This is a static demo — select one of the preset examples above, then click Identify Gaps & Draft Queries.</div>`; return; }
+  out.innerHTML = `<div class="empty-state">Identifying data gaps...</div>`;
+  setTimeout(()=>{
+    const r = queryExamples[querySelected].result;
+    const clsMap = {Adequate:'low', Partial:'medium', Insufficient:'high'};
+    const cls = clsMap[r.completeness_assessment] || 'medium';
+    out.innerHTML = `
+      <span class="badge ${cls}">COMPLETENESS: ${escapeHtml(r.completeness_assessment)}</span>
+      <div class="section-label">Missing Data Elements</div>
+      <ul class="qa-list">${r.missing_elements.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+      <div class="section-label">Draft Follow-up Questions</div>
+      <ul class="qa-list">${r.follow_up_questions.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+    `;
+  }, 700);
+});
+
+/* ================= MODULE 4: LITERATURE TRIAGE (preset demo data) ================= */
+const litExamples = [
+  {
+    abstract: `A retrospective cohort study of 4,200 patients on long-term proton pump inhibitor therapy found a statistically significant association with increased risk of hypomagnesemia-related cardiac arrhythmia, particularly in patients over 65 with concurrent diuretic use. The authors recommend periodic magnesium monitoring in high-risk patients.`,
+    result: {
+      relevance: "Safety-relevant",
+      reasoning: "The abstract reports a statistically significant association between long-term PPI use and a specific, clinically important adverse outcome in a defined at-risk subgroup, directly relevant to ongoing safety characterization of this drug class.",
+      suggested_pbrer_section: "Section on Signal and Risk Evaluation — cumulative safety data for long-term use",
+      key_safety_points: ["Association between long-term PPI therapy and hypomagnesemia-related cardiac arrhythmia", "Risk concentrated in patients over 65 with concurrent diuretic use", "Authors recommend periodic magnesium monitoring in high-risk patients"]
+    }
+  },
+  {
+    abstract: `A phase III trial substudy analyzed dose-modification strategies for capecitabine-induced palmar-plantar erythrodysesthesia in 850 patients with metastatic breast cancer. Preemptive dose reduction at first sign of Grade 1 symptoms was associated with a 34% reduction in Grade 3 PPE incidence without compromising progression-free survival, supporting proactive dose modification over reactive management.`,
+    result: {
+      relevance: "Safety-relevant",
+      reasoning: "The abstract provides prospective trial evidence on a validated risk-mitigation strategy for a known, dose-limiting toxicity, directly informing dose-modification and risk-minimization guidance without raising a new safety concern.",
+      suggested_pbrer_section: "Section on Risk Minimization Measures / Dose Modification Guidance",
+      key_safety_points: ["Preemptive dose reduction at Grade 1 PPE reduced Grade 3 incidence by 34%", "No compromise to progression-free survival with the proactive strategy", "Supports revising dose-modification guidance from reactive to preemptive management"]
+    }
+  }
+];
+let litSelected = null;
+document.querySelectorAll('#mod-lit .ex-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const idx = parseInt(btn.dataset.ex);
+    btn.parentElement.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    litSelected = idx;
+    document.getElementById('litInput').value = litExamples[idx].abstract;
+    document.getElementById('litOutput').innerHTML = `<div class="empty-state">Example loaded. Click Triage for Safety Relevance to run it.</div>`;
+  });
+});
+document.getElementById('litBtn').addEventListener('click', ()=>{
+  const out = document.getElementById('litOutput');
+  if(litSelected === null){ out.innerHTML = `<div class="error-box">This is a static demo — select one of the preset abstracts above, then click Triage for Safety Relevance.</div>`; return; }
+  out.innerHTML = `<div class="empty-state">Triaging abstract...</div>`;
+  setTimeout(()=>{
+    const r = litExamples[litSelected].result;
+    const clsMap = {'Safety-relevant':'high','Possibly relevant - review recommended':'medium','Not safety-relevant':'low'};
+    const cls = clsMap[r.relevance] || 'medium';
+    out.innerHTML = `
+      <span class="badge ${cls}">${escapeHtml(r.relevance)}</span>
+      <div class="section-label">Reasoning</div>
+      <div class="reasoning">${escapeHtml(r.reasoning)}</div>
+      <div class="section-label">Suggested PBRER Section</div>
+      <div class="event-desc">${escapeHtml(r.suggested_pbrer_section)}</div>
+      <div class="section-label">Key Safety Points</div>
+      <ul class="qa-list">${r.key_safety_points.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+    `;
+  }, 700);
+});
+
+/* ================= MODULE 5: SITE RISK SCORING (RBQM, fully live, rule-based) ================= */
+const defaultSites = [
+  {name:'Site 112 — Vadodara (Oncology)', deviations:3, query:4, sae:2, enrollment:88},
+  {name:'Site 217 — Chennai (Oncology)', deviations:8, query:11, sae:5, enrollment:55},
+  {name:'Site 305 — Delhi (Oncology)', deviations:1, query:2, sae:0, enrollment:102},
+];
+const siteTableBody = document.getElementById('siteTableBody');
+function siteRow(s){
+  return `<tr>
+    <td><input class="s-name" value="${escapeHtml(s.name)}"></td>
+    <td><input class="s-dev" type="number" min="0" value="${s.deviations}"></td>
+    <td><input class="s-query" type="number" min="0" value="${s.query}"></td>
+    <td><input class="s-sae" type="number" min="0" value="${s.sae}"></td>
+    <td><input class="s-enr" type="number" min="0" value="${s.enrollment}"></td>
+  </tr>`;
+}
+function renderSiteTable(){ siteTableBody.innerHTML = defaultSites.map(siteRow).join(''); }
+renderSiteTable();
+document.getElementById('addSiteBtn').addEventListener('click', ()=>{
+  defaultSites.push({name:`Site ${100+defaultSites.length*13} — New`, deviations:0, query:0, sae:0, enrollment:100});
+  renderSiteTable();
+});
+document.getElementById('riskBtn').addEventListener('click', ()=>{
+  const rows = siteTableBody.querySelectorAll('tr');
+  const sites = Array.from(rows).map(row=>({
+    name: row.querySelector('.s-name').value.trim() || 'Unnamed site',
+    deviations: parseFloat(row.querySelector('.s-dev').value) || 0,
+    query: parseFloat(row.querySelector('.s-query').value) || 0,
+    sae: parseFloat(row.querySelector('.s-sae').value) || 0,
+    enrollment: parseFloat(row.querySelector('.s-enr').value) || 0,
+  }));
+  const scored = sites.map(s=>{
+    const enrollGap = Math.abs(100 - s.enrollment);
+    const score = (s.deviations * 6) + (s.query * 3) + (s.sae * 8) + (enrollGap * 0.5);
+    return {...s, score};
+  });
+  const maxScore = Math.max(...scored.map(s=>s.score), 1);
+  scored.forEach(s=>{
+    s.pct = Math.round((s.score / maxScore) * 100);
+    s.tier = s.score >= maxScore*0.66 ? 'High' : s.score >= maxScore*0.33 ? 'Medium' : 'Low';
+  });
+  scored.sort((a,b)=>b.score - a.score);
+  const out = document.getElementById('riskOutput');
+  out.innerHTML = `
+    <div class="section-label">Monitoring Priority Ranking</div>
+    ${scored.map((s,i)=>`
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:'Newsreader',serif;font-size:15px;">${i+1}. ${escapeHtml(s.name)}</span>
+          <span class="badge ${s.tier.toLowerCase()}">${s.tier} RISK</span>
+        </div>
+        <div class="risk-bar"><div class="risk-bar-fill" style="width:${s.pct}%;"></div></div>
+        <div class="event-desc" style="margin-top:4px;">Major deviations: ${s.deviations} · Query turnaround: ${s.query}d · SAE reporting delay: ${s.sae}d · Enrollment: ${s.enrollment}% of target</div>
+      </div>
+    `).join('')}
+    <div class="section-label">Methodology</div>
+    <div class="reasoning">Weighted score = (major deviations × 6) + (avg query turnaround days × 3) + (SAE reporting delay days × 8) + (|100 − enrollment%| × 0.5). Sites are ranked and tiered relative to the highest-scoring site in this set, consistent with ICH E6(R2) risk-based quality management principles.</div>
+  `;
+});
+
+/* ================= MODULE 6: DASHBOARD (fully live, no API) ================= */
+function renderDashboard(){
+  const statsEl = document.getElementById('dashStats');
+  const barsEl = document.getElementById('dashBars');
+  if(codedCases.length === 0){
+    statsEl.innerHTML = `<div class="empty-state">Code cases in Module 1 to populate this dashboard.</div>`;
+    barsEl.innerHTML = `<div class="empty-state">No data yet.</div>`;
+    return;
+  }
+  const total = codedCases.length;
+  const seriousCount = codedCases.filter(c=>c.result.seriousness_flag).length;
+  const seriousRate = Math.round((seriousCount/total)*100);
+  const causalityCounts = {}, socCounts = {};
+  codedCases.forEach(c=>{
+    const cat = c.result.causality_category || 'Unclassified';
+    causalityCounts[cat] = (causalityCounts[cat]||0)+1;
+    const soc = c.result.soc || 'Unspecified';
+    socCounts[soc] = (socCounts[soc]||0)+1;
+  });
+  statsEl.innerHTML = `
+    <div class="dash-stat"><span class="k">Cases Coded (session)</span><span class="v">${total}</span></div>
+    <div class="dash-stat"><span class="k">Seriousness Rate</span><span class="v">${seriousRate}%</span></div>
+    <div class="dash-stat"><span class="k">Serious Cases</span><span class="v">${seriousCount}</span></div>
+    <div class="dash-stat"><span class="k">Non-Serious Cases</span><span class="v">${total-seriousCount}</span></div>
+  `;
+  function barsFromCounts(counts, total){
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+      <div class="bar-row">
+        <div class="bar-label"><span>${escapeHtml(k)}</span><span>${v}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/total)*100)}%;"></div></div>
+      </div>
+    `).join('');
+  }
+  barsEl.innerHTML = `
+    <div class="section-label">Causality Distribution</div>
+    ${barsFromCounts(causalityCounts, total)}
+    <div class="section-label">SOC Distribution</div>
+    ${barsFromCounts(socCounts, total)}
+  `;
+}
+</script>
+</body>
+</html>
